@@ -22,6 +22,11 @@ from collections import defaultdict
 import urllib.request
 import argparse
 
+try:
+    import anthropic as _anthropic
+except ImportError:
+    _anthropic = None
+
 # ─────────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────────
@@ -67,6 +72,8 @@ def parse_duration(s):
         return parts[0]*60 + parts[1]
     return 0
 
+CATEGORY_NAMES = [c for c, _ in CATEGORIES] + [FALLBACK_CATEGORY]
+
 def categorise(title, desc=""):
     text = (title + " " + desc).lower()
     for cat, keywords in CATEGORIES:
@@ -74,12 +81,46 @@ def categorise(title, desc=""):
             return cat
     return FALLBACK_CATEGORY
 
+def categorise_with_claude(title, desc, client):
+    """Use Claude API for accurate categorisation; falls back to keyword matching on error."""
+    category_list = "\n".join(f"- {c}" for c in CATEGORY_NAMES)
+    try:
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=20,
+            system=(
+                "You categorise Morning Ireland (RTÉ Radio 1) radio news segments. "
+                "Reply with ONLY the single best matching category name from the list, "
+                "exactly as written. No explanation, no punctuation."
+            ),
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Categories:\n{category_list}\n\n"
+                    f"Title: {title}\n"
+                    f"Description: {desc}\n\n"
+                    "Category:"
+                ),
+            }],
+        )
+        result = msg.content[0].text.strip()
+        if result in CATEGORY_NAMES:
+            return result
+        # Partial match fallback
+        for name in CATEGORY_NAMES:
+            if name in result:
+                return name
+        return FALLBACK_CATEGORY
+    except Exception as e:
+        print(f"    Claude API error ({e}) — falling back to keyword matching")
+        return categorise(title, desc)
+
 def fetch_rss(url):
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=15) as resp:
         return resp.read()
 
-def parse_feed(xml_bytes):
+def parse_feed(xml_bytes, client=None):
     ns = {
         "itunes":  "http://www.itunes.com/dtds/podcast-1.0.dtd",
         "clipper": "http://www.rte.ie/applications/ipad/schemas",
@@ -101,7 +142,7 @@ def parse_feed(xml_bytes):
         duration = parse_duration(dur_el.text)
         seg_date = date_el.text.strip()          # yyyy-mm-dd
         guid     = guid_el.text.strip() if guid_el is not None else f"{seg_date}-{title}"
-        category = categorise(title, desc)
+        category = categorise_with_claude(title, desc, client) if client else categorise(title, desc)
 
         items.append({
             "guid":     guid,
@@ -270,13 +311,31 @@ def main():
                         help="Re-run categorisation on all existing CSV rows and rewrite the file")
     args = parser.parse_args()
 
+    # Set up Claude client if API key is available
+    client = None
+    if _anthropic:
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if api_key:
+            client = _anthropic.Anthropic(api_key=api_key)
+            print("  Using Claude API for categorisation")
+        else:
+            print("  ANTHROPIC_API_KEY not set — using keyword matching")
+    else:
+        print("  anthropic package not installed — using keyword matching")
+
     if args.recategorise:
         rows = load_all_items(CSV_FILE)
         if not rows:
             print("No data in CSV to recategorise.")
             sys.exit(0)
-        for r in rows:
-            r["category"] = categorise(r["title"], r.get("desc", ""))
+        for i, r in enumerate(rows):
+            r["category"] = (
+                categorise_with_claude(r["title"], r.get("desc", ""), client)
+                if client else
+                categorise(r["title"], r.get("desc", ""))
+            )
+            if client:
+                print(f"  [{i+1}/{len(rows)}] {r['title'][:60]} → {r['category']}")
         with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
             writer.writeheader()
@@ -292,7 +351,7 @@ def main():
             print(f"  ERROR fetching feed: {e}")
             sys.exit(1)
 
-        items = parse_feed(xml_bytes)
+        items = parse_feed(xml_bytes, client=client)
         print(f"  Parsed {len(items)} segments from feed")
 
         existing = load_existing_guids(CSV_FILE)

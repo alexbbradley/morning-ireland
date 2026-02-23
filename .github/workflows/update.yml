@@ -31,7 +31,12 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Install Python dependencies
+        run: pip install anthropic
+
       - name: Fetch RSS and update CSV
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python morning_ireland.py
 
       - name: Build HTML
