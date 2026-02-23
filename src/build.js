@@ -40,6 +40,7 @@ const TW_BIN = path.join(ROOT, 'node_modules', '.bin', `tailwindcss${TW_EXT}`);
 // ── Category config (mirrors morning_ireland.py) ──────────────────────────────
 
 const CATEGORIES = [
+  ['Road Accidents',    ['road accident', 'road crash', 'road death', 'road fatality', 'road collision', 'fatal crash', 'fatal collision', 'rsa ']],
   ['Sports',            ['sports news', 'sport']],
   ['Business',          ['business news']],
   ['Weather',           ['weather forecast', 'weather warning', 'rainfall', 'flooding', 'flood', 'orange alert', 'yellow warning', 'orange warning', 'met éireann', 'met eireann', 'rain warning']],
@@ -56,7 +57,6 @@ const CATEGORIES = [
   ['Tech / Digital',    ['social media', 'ai ', 'artificial intelligence', 'data protection', 'grok', 'internet', 'cybersafe', 'digital']],
   ['Transport',         ['dublin airport', 'airport', 'bus', 'rail', 'irish rail', 'flight', 'donegal']],
   ['Northern Ireland',  ['northern ireland', 'uup', 'dup', 'sinn féin', 'troubles', 'stakeknife', 'derry', 'belfast', 'stormont']],
-  ['Road Accidents',    ['road accident', 'road crash', 'road death', 'road fatality', 'road collision', 'fatal crash', 'fatal collision', 'rsa ']],
   ['Dublin',            ['city centre', 'inner city', 'docklands', 'liberties', 'phoenix park', 'luas', 'dart ']],
 ];
 
