@@ -292,42 +292,66 @@ def main():
     oa_client     = _openai.OpenAI(api_key=openai_key)
     claude_client = _anthropic.Anthropic(api_key=anthropic_key)
 
-    # 1. Find episode
-    print(f'Looking up episode for {target_date} …')
-    slug = get_episode_slug_for_date(target_date)
-    if not slug:
-        print(f'  No episode found for {target_date} on the listing page.')
-        sys.exit(0)
-    print(f'  Slug: {slug}')
-
-    # 2. Get HLS URL
-    clipper_id = get_clipper_id(slug)
-    hls_url, duration_s = get_hls_url(clipper_id)
-    print(f'  Clipper ID : {clipper_id}')
-    print(f'  Duration   : {duration_s//60}m {duration_s%60:02d}s')
-    print(f'  HLS URL    : {hls_url}')
-
-    # 3. Download + split + transcribe in a temp dir
     os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        audio_path = os.path.join(tmpdir, 'show.mp3')
+    partial_path = transcript_path.replace('.json', '.partial.json')
 
-        print('\nDownloading audio …')
-        download_audio(hls_url, audio_path)
+    # If a .partial file exists, the Whisper step already completed last run —
+    # skip straight to Claude segmentation.
+    if os.path.exists(partial_path) and not args.force:
+        print(f'Resuming from saved Whisper transcript: {partial_path}')
+        with open(partial_path, encoding='utf-8') as f:
+            partial = json.load(f)
+        whisper_segs = partial['whisper_segs']
+        clipper_id   = partial['clipper_id']
+        slug         = partial['slug']
+        duration_s   = partial['duration_s']
+    else:
+        # 1. Find episode
+        print(f'Looking up episode for {target_date} …')
+        slug = get_episode_slug_for_date(target_date)
+        if not slug:
+            print(f'  No episode found for {target_date} on the listing page.')
+            sys.exit(0)
+        print(f'  Slug: {slug}')
 
-        print('\nSplitting into 10-minute chunks …')
-        chunks = split_audio(audio_path, tmpdir)
-        print(f'  {len(chunks)} chunks')
+        # 2. Get HLS URL
+        clipper_id = get_clipper_id(slug)
+        hls_url, duration_s = get_hls_url(clipper_id)
+        print(f'  Clipper ID : {clipper_id}')
+        print(f'  Duration   : {duration_s//60}m {duration_s%60:02d}s')
+        print(f'  HLS URL    : {hls_url}')
 
-        print('\nTranscribing with Whisper …')
-        whisper_segs = transcribe_chunks(chunks, oa_client)
-        print(f'  Total phrases: {len(whisper_segs)}')
+        # 3. Download + split + transcribe in a temp dir
+        with tempfile.TemporaryDirectory() as tmpdir:
+            audio_path = os.path.join(tmpdir, 'show.mp3')
+
+            print('\nDownloading audio …')
+            download_audio(hls_url, audio_path)
+
+            print('\nSplitting into 10-minute chunks …')
+            chunks = split_audio(audio_path, tmpdir)
+            print(f'  {len(chunks)} chunks')
+
+            print('\nTranscribing with Whisper …')
+            whisper_segs = transcribe_chunks(chunks, oa_client)
+            print(f'  Total phrases: {len(whisper_segs)}')
+
+        # Save partial so we can resume if Claude fails
+        with open(partial_path, 'w', encoding='utf-8') as f:
+            json.dump({
+                'date':        target_date,
+                'clipper_id':  clipper_id,
+                'slug':        slug,
+                'duration_s':  duration_s,
+                'whisper_segs': whisper_segs,
+            }, f, ensure_ascii=False)
+        print(f'  Whisper transcript cached → {partial_path}')
 
     # 4. Segment with Claude
     print('\nSegmenting with Claude …')
     segments = segment_with_claude(whisper_segs, claude_client)
 
-    # 5. Save transcript
+    # 5. Save final transcript and remove the partial file
     transcript = {
         'date':       target_date,
         'clipper_id': int(clipper_id),
@@ -337,6 +361,8 @@ def main():
     }
     with open(transcript_path, 'w', encoding='utf-8') as f:
         json.dump(transcript, f, indent=2, ensure_ascii=False)
+    if os.path.exists(partial_path):
+        os.remove(partial_path)
 
     print(f'\nSaved → {transcript_path}')
     print(f'\nSegments ({len(segments)} total):')
