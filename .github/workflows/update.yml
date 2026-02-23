@@ -11,6 +11,10 @@ on:
         description: 'Re-categorise all existing CSV rows with Claude'
         type: boolean
         default: false
+      resegment:
+        description: 'Re-run Claude segmentation on today''s existing transcript'
+        type: boolean
+        default: false
 
 jobs:
   update:
@@ -49,7 +53,14 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python morning_ireland.py --recategorise
 
+      - name: Re-segment today's transcript (if requested)
+        if: ${{ inputs.resegment }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python morning_ireland_audio.py --resegment
+
       - name: Transcribe full show
+        if: ${{ !inputs.resegment }}
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

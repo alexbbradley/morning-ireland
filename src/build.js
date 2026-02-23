@@ -57,7 +57,7 @@ const CATEGORY_ORDER = [
   'Northern Ireland',
   'Dublin',
   'Ads',
-  'Other',
+  'Uncategorised',
 ];
 
 const PALETTE = {
@@ -80,7 +80,7 @@ const PALETTE = {
   'Road Accidents':    '#795548',
   'Dublin':            '#283593',
   'Ads':               '#E0E0E0',
-  'Other':             '#BDBDBD',
+  'Uncategorised':     '#BDBDBD',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -119,7 +119,7 @@ function build() {
 
     agg[date] = {};
     for (const seg of data.segments) {
-      const cat     = seg.category || 'Other';
+      const cat     = (seg.category === 'Other' || !seg.category) ? 'Uncategorised' : seg.category;
       const durSecs = Math.max(0, seg.end_s - seg.start_s);
 
       if (!agg[date][cat]) agg[date][cat] = { mins: 0, segs: [] };

@@ -56,7 +56,7 @@ CATEGORY_NAMES = [
     'Northern Ireland',
     'Dublin',
     'Ads',
-    'Other',
+    'Uncategorised',
 ]
 
 TRANSCRIPTS_DIR = os.path.join(os.path.dirname(__file__), 'transcripts')
@@ -262,10 +262,44 @@ def main():
                         help='Date to process (YYYY-MM-DD), default: today')
     parser.add_argument('--force', action='store_true',
                         help='Re-process even if transcript already exists')
+    parser.add_argument('--resegment', action='store_true',
+                        help='Re-run only the Claude segmentation step using the existing transcript')
     args = parser.parse_args()
 
     target_date     = args.date
     transcript_path = os.path.join(TRANSCRIPTS_DIR, f'{target_date}.json')
+
+    # --resegment: load existing final transcript, re-run Claude, overwrite
+    if args.resegment:
+        if not os.path.exists(transcript_path):
+            print(f'No transcript found for {target_date}: {transcript_path}')
+            sys.exit(1)
+        if _anthropic is None:
+            print('ERROR: anthropic package not installed.  Run: pip install anthropic')
+            sys.exit(1)
+        anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
+        if not anthropic_key:
+            print('ERROR: ANTHROPIC_API_KEY environment variable not set')
+            sys.exit(1)
+        claude_client = _anthropic.Anthropic(api_key=anthropic_key)
+        with open(transcript_path, encoding='utf-8') as f:
+            existing = json.load(f)
+        # Reconstruct whisper_segs from existing segments' timing + text
+        # (we stored only segments, not raw whisper phrases — use segment timing as proxy)
+        whisper_segs = [
+            {'start': s['start_s'], 'end': s['end_s'], 'text': s['title']}
+            for s in existing['segments']
+        ]
+        print(f'\nRe-segmenting {target_date} with Claude …')
+        segments = segment_with_claude(whisper_segs, claude_client)
+        existing['segments'] = segments
+        with open(transcript_path, 'w', encoding='utf-8') as f:
+            json.dump(existing, f, indent=2, ensure_ascii=False)
+        print(f'\nSaved → {transcript_path}')
+        for seg in segments:
+            m_s, m_e = seg['start_s'] // 60, seg['end_s'] // 60
+            print(f"  [{m_s:02d}m–{m_e:02d}m]  {seg['category']:<20}  {seg['title']}")
+        return
 
     if os.path.exists(transcript_path) and not args.force:
         print(f'Transcript already exists: {transcript_path}  (use --force to redo)')
