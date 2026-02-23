@@ -8,13 +8,13 @@
       "start_s": 0,
       "end_s": 33,
       "title": "Morning Ireland programme introduction and preview",
-      "category": "Other"
+      "category": "Uncategorised"
     },
     {
       "start_s": 33,
       "end_s": 67,
       "title": "Business and sport headlines preview",
-      "category": "Other"
+      "category": "Uncategorised"
     },
     {
       "start_s": 67,
@@ -66,14 +66,8 @@
     },
     {
       "start_s": 644,
-      "end_s": 671,
-      "title": "Ukraine fourth anniversary preview",
-      "category": "International"
-    },
-    {
-      "start_s": 671,
       "end_s": 1051,
-      "title": "Armed man shot dead at Mar-a-Lago",
+      "title": "Ukraine fourth anniversary and Mar-a-Lago shooting",
       "category": "International"
     },
     {
@@ -222,12 +216,12 @@
     },
     {
       "start_s": 4608,
-      "end_s": 4683,
+      "end_s": 4660,
       "title": "News headlines at 8:32",
       "category": "News Bulletin"
     },
     {
-      "start_s": 4683,
+      "start_s": 4660,
       "end_s": 4759,
       "title": "Business gold price and workers pay survey",
       "category": "Business"
@@ -260,7 +254,7 @@
       "start_s": 5170,
       "end_s": 5290,
       "title": "EU trade response to Trump tariff ruling",
-      "category": "Business"
+      "category": "International"
     },
     {
       "start_s": 5290,
@@ -272,11 +266,11 @@
       "start_s": 5419,
       "end_s": 5452,
       "title": "Programme close and credits",
-      "category": "Other"
+      "category": "Uncategorised"
     },
     {
       "start_s": 5452,
-      "end_s": 5412,
+      "end_s": 5500,
       "title": "Irish Hotels Federation annual conference costs",
       "category": "Business"
     }
