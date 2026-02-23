@@ -4,7 +4,7 @@
  *
  * Reads ../morning_ireland_data.csv, aggregates data by date + category,
  * compiles Tailwind CSS, injects everything into src/template.html, and
- * writes a self-contained dist/index.html.
+ * writes a self-contained docs/index.html.
  *
  * Usage:
  *   node src/build.js           # build once
@@ -29,7 +29,7 @@ const ROOT     = path.resolve(__dirname, '..');
 const CSV_FILE = path.join(ROOT, 'morning_ireland_data.csv');
 const TMPL     = path.join(__dirname, 'template.html');
 const IN_CSS   = path.join(__dirname, 'styles.css');
-const DIST     = path.join(ROOT, 'dist');
+const DIST     = path.join(ROOT, 'docs');
 const OUT_CSS  = path.join(DIST, 'styles.css');
 const OUT_HTML = path.join(DIST, 'index.html');
 
