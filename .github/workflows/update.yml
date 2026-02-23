@@ -5,7 +5,12 @@ on:
     # Noon UTC every weekday — Morning Ireland is Mon–Fri
     # (UTC+0 in winter = 12pm Irish time; UTC+1 summer = still caught by midday)
     - cron: '0 12 * * 1-5'
-  workflow_dispatch:   # lets you trigger a run manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      recategorise:
+        description: 'Re-categorise all existing CSV rows with Claude'
+        type: boolean
+        default: false
 
 jobs:
   update:
@@ -33,6 +38,12 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install anthropic
+
+      - name: Recategorise existing rows (if requested)
+        if: ${{ inputs.recategorise }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python morning_ireland.py --recategorise
 
       - name: Fetch RSS and update CSV
         env:
