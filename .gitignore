@@ -1,0 +1,3 @@
+node_modules/
+
+# dist/ is committed so GitHub Pages can serve it — do not ignore it

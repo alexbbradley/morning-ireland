@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray-50">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Ireland — Topic Analysis</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+  <style>{{STYLES}}</style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-800">
+
+  <div class="w-full mx-auto px-4 sm:px-6 py-8 space-y-6">
+
+    <!-- Header -->
+    <header class="border-b border-gray-200 pb-4">
+      <div class="flex items-baseline gap-3">
+        <h1 class="text-2xl font-bold tracking-tight text-gray-900">Morning Ireland</h1>
+        <span class="text-sm text-gray-400 font-medium">RTÉ Radio 1</span>
+      </div>
+      <p class="mt-1 text-sm text-gray-500">Time spent per topic, per broadcast day</p>
+    </header>
+
+    <!-- Stats bar -->
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-500">
+      <span class="font-semibold text-gray-700">{{SEGMENT_COUNT}} segments</span>
+      <span>across <span class="font-semibold text-gray-700">{{DAY_COUNT}} days</span></span>
+      <span class="text-gray-300 hidden sm:inline">|</span>
+      <span>Updated {{BUILD_TIME}}</span>
+      <span class="text-gray-300 hidden sm:inline">|</span>
+      <span class="italic">Hover bars for detail</span>
+    </div>
+
+    <!-- Chart -->
+    <div id="chart-wrapper" class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div id="chart" class="px-2 pt-2"></div>
+    </div>
+
+  </div>
+
+  <script>
+    var fig = {{CHART_DATA}};
+    var chartEl = document.getElementById('chart');
+
+    // When responsive:true is active Plotly reads the *container's CSS height*
+    // rather than layout.height. Without an explicit height the container
+    // collapses to 0 on resize. Mirror the layout value onto the element first.
+    chartEl.style.height = '80vh';
+
+    Plotly.newPlot(chartEl, fig.data, fig.layout, { responsive: true, displayModeBar: true });
+
+    var resizeTimer;
+    window.addEventListener('resize', function () {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () { Plotly.Plots.resize(chartEl); }, 100);
+    });
+  </script>
+
+</body>
+</html>

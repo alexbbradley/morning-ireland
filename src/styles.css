@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Custom styles ─────────────────────────────────────────────────────────
+   Add project-specific overrides below. Tailwind utility classes used in
+   src/template.html take precedence via the generated stylesheet.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Example: tweak the chart container shadow */
+/* #chart-wrapper { @apply shadow-lg; } */
+
+
