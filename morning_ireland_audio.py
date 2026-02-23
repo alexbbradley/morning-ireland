@@ -55,6 +55,7 @@ CATEGORY_NAMES = [
     'Transport',
     'Northern Ireland',
     'Dublin',
+    'Ads',
     'Other',
 ]
 

@@ -56,6 +56,7 @@ const CATEGORY_ORDER = [
   'Transport',
   'Northern Ireland',
   'Dublin',
+  'Ads',
   'Other',
 ];
 
@@ -78,6 +79,7 @@ const PALETTE = {
   'Northern Ireland':  '#7B1FA2',
   'Road Accidents':    '#795548',
   'Dublin':            '#283593',
+  'Ads':               '#E0E0E0',
   'Other':             '#BDBDBD',
 };
 
