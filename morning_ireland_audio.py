@@ -21,6 +21,7 @@ import subprocess
 import tempfile
 import argparse
 import urllib.request
+import time
 from datetime import date
 
 try:
@@ -230,11 +231,20 @@ def segment_with_claude(whisper_segs, claude_client):
     )
 
     print('  Sending to Claude for segmentation … ', end='', flush=True)
-    msg = claude_client.messages.create(
-        model='claude-haiku-4-5-20251001',
-        max_tokens=4096,
-        messages=[{'role': 'user', 'content': prompt}],
-    )
+    for attempt in range(5):
+        try:
+            msg = claude_client.messages.create(
+                model='claude-haiku-4-5-20251001',
+                max_tokens=4096,
+                messages=[{'role': 'user', 'content': prompt}],
+            )
+            break
+        except Exception as e:
+            if attempt == 4:
+                raise
+            wait = 30 * (attempt + 1)
+            print(f'\n  Claude error ({e}), retrying in {wait}s … ', end='', flush=True)
+            time.sleep(wait)
     text = msg.content[0].text.strip()
     # Strip any accidental code fences
     text = re.sub(r'^```(?:json)?\n?', '', text)
