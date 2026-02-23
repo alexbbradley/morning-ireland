@@ -124,15 +124,16 @@ def get_hls_url(clipper_id):
 # ── Audio processing ──────────────────────────────────────────────────────────
 
 def download_audio(hls_url, output_path):
-    """Download HLS stream to MP3 via ffmpeg."""
+    """Download HLS stream to MP3 via yt-dlp (handles RTÉ CDN headers/auth)."""
     print(f'  Downloading {hls_url} …', flush=True)
     subprocess.run(
         [
-            'ffmpeg', '-y',
-            '-i', hls_url,
-            '-acodec', 'libmp3lame', '-q:a', '5',
-            '-loglevel', 'error',
-            output_path,
+            sys.executable, '-m', 'yt_dlp',
+            '--no-warnings', '--quiet',
+            '-x', '--audio-format', 'mp3', '--audio-quality', '5',
+            '--add-header', 'Referer:https://www.rte.ie/',
+            '-o', output_path,
+            hls_url,
         ],
         check=True,
     )

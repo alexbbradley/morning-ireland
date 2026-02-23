@@ -40,7 +40,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Install Python dependencies
-        run: pip install anthropic openai
+        run: pip install anthropic openai yt-dlp
 
       - name: Recategorise existing rows (if requested)
         if: ${{ inputs.recategorise }}
