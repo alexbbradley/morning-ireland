@@ -2,65 +2,62 @@
 /**
  * Morning Ireland — HTML build script
  *
- * Reads ../morning_ireland_data.csv, aggregates data by date + category,
- * compiles Tailwind CSS, injects everything into src/template.html, and
- * writes a self-contained docs/index.html.
+ * Reads ../transcripts/YYYY-MM-DD.json files, aggregates time per category
+ * per day, compiles Tailwind CSS, injects everything into src/template.html,
+ * and writes a self-contained docs/index.html.
  *
  * Usage:
  *   node src/build.js           # build once
- *   node src/build.js --watch   # rebuild whenever the CSV changes
+ *   node src/build.js --watch   # rebuild whenever a transcript changes
  *
  * Normally invoked via npm scripts (see package.json):
  *   npm run build
  *   npm run watch
- *   npm run update   # python fetch → node build
  */
 
 'use strict';
 
 const fs   = require('fs');
 const path = require('path');
-const { execSync }  = require('child_process');
-const { parse }     = require('csv-parse/sync');
+const { execSync } = require('child_process');
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-const ROOT     = path.resolve(__dirname, '..');
-const CSV_FILE = path.join(ROOT, 'morning_ireland_data.csv');
-const TMPL     = path.join(__dirname, 'template.html');
-const IN_CSS   = path.join(__dirname, 'styles.css');
-const DIST     = path.join(ROOT, 'docs');
-const OUT_CSS  = path.join(DIST, 'styles.css');
-const OUT_HTML = path.join(DIST, 'index.html');
+const ROOT            = path.resolve(__dirname, '..');
+const TRANSCRIPTS_DIR = path.join(ROOT, 'transcripts');
+const TMPL            = path.join(__dirname, 'template.html');
+const IN_CSS          = path.join(__dirname, 'styles.css');
+const DIST            = path.join(ROOT, 'docs');
+const OUT_CSS         = path.join(DIST, 'styles.css');
+const OUT_HTML        = path.join(DIST, 'index.html');
 
 // Resolve tailwindcss binary installed locally (works on Windows and Unix)
 const TW_EXT = process.platform === 'win32' ? '.cmd' : '';
 const TW_BIN = path.join(ROOT, 'node_modules', '.bin', `tailwindcss${TW_EXT}`);
 
-// ── Category config (mirrors morning_ireland.py) ──────────────────────────────
+// ── Category order + colour palette ───────────────────────────────────────────
 
-const CATEGORIES = [
-  ['Road Accidents',    ['road accident', 'road crash', 'road death', 'road fatality', 'road collision', 'fatal crash', 'fatal collision', 'rsa ']],
-  ['Sports',            ['sports news', 'sport']],
-  ['Business',          ['business news']],
-  ['Weather',           ['weather forecast', 'weather warning', 'rainfall', 'flooding', 'flood', 'orange alert', 'yellow warning', 'orange warning', 'met éireann', 'met eireann', 'rain warning']],
-  ['News Bulletin',     ['news bulletin']],
-  ['It Says in Papers', ['it says in the paper']],
-  ['Health / HSE',      ['hse', 'hospital', 'mental health', 'camhs', 'nursing', 'psychiatr', 'cancer', 'cardiac', 'heart attack', 'surgery', 'sna', 'disability', 'thalidomide', 'tobacco', 'smoking']],
-  ['Crime / Justice',   ['garda', 'gardaí', 'murder', 'attack', 'arson', 'shooting', 'theft', 'prison', 'court', 'criminal', 'crime', 'regency', 'stardust', 'cloverhill']],
-  ['Politics / Gov',    ['minister', 'taoiseach', 'dáil', 'oireachtas', 'government', 'coalition', 'sinn féin', 'fine gael', 'fianna fáil', 'labour', 'green party', 'council', 'mayor', 'senator', 'td ']],
-  ['Housing',           ['housing', 'tenant', 'hap ', 'rent', 'apartment', 'home buying', 'homeless', 'accommodation', 'fire safety']],
-  ['International',     ['trump', 'gaza', 'ukraine', 'russia', 'iran', 'israel', 'eu ', 'european', 'uk ', 'britain', 'brexit', 'hong kong', 'epstein', 'maxwell', 'canada', 'sudan', 'darfur', 'nato', 'munich security']],
-  ['Agriculture',       ['farm', 'slurry', 'crop', 'livestock', 'agri']],
-  ['Arts / Culture',    ['film', 'music', 'theatre', 'book', 'festival', 'award', 'michelin', 'hot press', 'orchestra', 'poet', 'director', 'actor', 'netflix', 'cinema', 'gallery', 'exhibition']],
-  ['Science / Nature',  ['climate', 'wildlife', 'whale', 'dolphin', 'hedgehog', 'toxic plant', 'conservation', 'epa', 'environment', 'ecology', 'botany']],
-  ['Tech / Digital',    ['social media', 'ai ', 'artificial intelligence', 'data protection', 'grok', 'internet', 'cybersafe', 'digital']],
-  ['Transport',         ['dublin airport', 'airport', 'bus', 'rail', 'irish rail', 'flight', 'donegal']],
-  ['Northern Ireland',  ['northern ireland', 'uup', 'dup', 'sinn féin', 'troubles', 'stakeknife', 'derry', 'belfast', 'stormont']],
-  ['Dublin',            ['city centre', 'inner city', 'docklands', 'liberties', 'phoenix park', 'luas', 'dart ']],
+const CATEGORY_ORDER = [
+  'Road Accidents',
+  'Sports',
+  'Business',
+  'Weather',
+  'News Bulletin',
+  'It Says in Papers',
+  'Health / HSE',
+  'Crime / Justice',
+  'Politics / Gov',
+  'Housing',
+  'International',
+  'Agriculture',
+  'Arts / Culture',
+  'Science / Nature',
+  'Tech / Digital',
+  'Transport',
+  'Northern Ireland',
+  'Dublin',
+  'Other',
 ];
-
-const FALLBACK = 'Other';
 
 const PALETTE = {
   'Sports':            '#2196F3',
@@ -86,14 +83,6 @@ const PALETTE = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function categorise(title) {
-  const tl = title.toLowerCase();
-  for (const [cat, kws] of CATEGORIES) {
-    if (kws.some(kw => tl.includes(kw))) return cat;
-  }
-  return FALLBACK;
-}
-
 function fmtDuration(secs) {
   return `${Math.floor(secs / 60)}m ${String(secs % 60).padStart(2, '0')}s`;
 }
@@ -108,23 +97,44 @@ function build() {
   const t0 = Date.now();
   process.stdout.write('Building… ');
 
-  // 1. Parse CSV
-  const csvText = fs.readFileSync(CSV_FILE, 'utf8');
-  const rows = parse(csvText, { columns: true, skip_empty_lines: true });
-  rows.forEach(r => { r.duration = parseInt(r.duration, 10); });
+  // 1. Read all transcript JSON files
+  const files = fs.readdirSync(TRANSCRIPTS_DIR)
+    .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
+    .sort();
+
+  if (files.length === 0) {
+    console.error('No transcript JSON files found in transcripts/');
+    process.exit(1);
+  }
 
   // 2. Aggregate: agg[date][category] = { mins, segs[] }
   const agg = {};
-  for (const r of rows) {
-    if (!agg[r.date]) agg[r.date] = {};
-    if (!agg[r.date][r.category]) agg[r.date][r.category] = { mins: 0, segs: [] };
-    agg[r.date][r.category].mins += r.duration / 60;
-    agg[r.date][r.category].segs.push(r);
+  let totalSegs = 0;
+
+  for (const file of files) {
+    const date = file.replace('.json', '');
+    const data = JSON.parse(fs.readFileSync(path.join(TRANSCRIPTS_DIR, file), 'utf8'));
+
+    agg[date] = {};
+    for (const seg of data.segments) {
+      const cat     = seg.category || 'Other';
+      const durSecs = Math.max(0, seg.end_s - seg.start_s);
+
+      if (!agg[date][cat]) agg[date][cat] = { mins: 0, segs: [] };
+      agg[date][cat].mins += durSecs / 60;
+      agg[date][cat].segs.push({ title: seg.title, duration: durSecs, start_s: seg.start_s });
+    }
+    totalSegs += data.segments.length;
   }
 
   const dates = Object.keys(agg).sort();
-  const allCats = [...CATEGORIES.map(c => c[0]), FALLBACK];
-  const presentCats = allCats.filter(c => dates.some(d => agg[d][c]?.mins > 0));
+
+  // Collect all categories that appear in the data, ordered by CATEGORY_ORDER
+  const seenCats = new Set(dates.flatMap(d => Object.keys(agg[d])));
+  const presentCats = [
+    ...CATEGORY_ORDER.filter(c => seenCats.has(c)),
+    ...[...seenCats].filter(c => !CATEGORY_ORDER.includes(c)).sort(),
+  ];
 
   // 3. Build Plotly traces
   const traces = presentCats.map(cat => {
@@ -178,11 +188,11 @@ function build() {
   // 5. Render template — replace all {{TOKEN}} placeholders
   let html = fs.readFileSync(TMPL, 'utf8');
   html = html
-    .replace('{{STYLES}}',         css)
-    .replace('{{CHART_DATA}}',     JSON.stringify({ data: traces, layout }))
-    .replace('{{SEGMENT_COUNT}}',  rows.length)
-    .replace('{{DAY_COUNT}}',      dates.length)
-    .replace('{{BUILD_TIME}}',     buildTimestamp());
+    .replace('{{STYLES}}',        css)
+    .replace('{{CHART_DATA}}',    JSON.stringify({ data: traces, layout }))
+    .replace('{{SEGMENT_COUNT}}', totalSegs)
+    .replace('{{DAY_COUNT}}',     dates.length)
+    .replace('{{BUILD_TIME}}',    buildTimestamp());
 
   fs.writeFileSync(OUT_HTML, html, 'utf8');
 
@@ -192,7 +202,7 @@ function build() {
     fs.copyFileSync(cnameSrc, path.join(DIST, 'CNAME'));
   }
 
-  console.log(`done (${rows.length} segs, ${dates.length} days, ${Date.now() - t0}ms)`);
+  console.log(`done (${totalSegs} segs, ${dates.length} days, ${Date.now() - t0}ms)`);
   console.log(`  → ${OUT_HTML}`);
 }
 
@@ -206,9 +216,9 @@ try {
 }
 
 if (process.argv.includes('--watch')) {
-  console.log(`\nWatching ${CSV_FILE} for changes…`);
+  console.log(`\nWatching ${TRANSCRIPTS_DIR} for changes…`);
   let debounce;
-  fs.watch(CSV_FILE, () => {
+  fs.watch(TRANSCRIPTS_DIR, () => {
     clearTimeout(debounce);
     debounce = setTimeout(() => {
       try { build(); } catch (err) { console.error('Rebuild failed:', err.message); }
