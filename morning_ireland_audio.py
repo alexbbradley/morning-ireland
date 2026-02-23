@@ -284,13 +284,12 @@ def main():
         claude_client = _anthropic.Anthropic(api_key=anthropic_key)
         with open(transcript_path, encoding='utf-8') as f:
             existing = json.load(f)
-        # Reconstruct whisper_segs from existing segments' timing + text
-        # (we stored only segments, not raw whisper phrases — use segment timing as proxy)
-        whisper_segs = [
-            {'start': s['start_s'], 'end': s['end_s'], 'text': s['title']}
-            for s in existing['segments']
-        ]
-        print(f'\nRe-segmenting {target_date} with Claude …')
+        if 'whisper_segs' not in existing:
+            print('ERROR: transcript has no raw Whisper phrases — cannot re-segment.')
+            print('Use --force to re-download and re-transcribe from scratch.')
+            sys.exit(1)
+        whisper_segs = existing['whisper_segs']
+        print(f'\nRe-segmenting {target_date} with Claude ({len(whisper_segs)} Whisper phrases) …')
         segments = segment_with_claude(whisper_segs, claude_client)
         existing['segments'] = segments
         with open(transcript_path, 'w', encoding='utf-8') as f:
@@ -387,11 +386,12 @@ def main():
 
     # 5. Save final transcript and remove the partial file
     transcript = {
-        'date':       target_date,
-        'clipper_id': int(clipper_id),
-        'slug':       slug,
-        'duration_s': duration_s,
-        'segments':   segments,
+        'date':        target_date,
+        'clipper_id':  int(clipper_id),
+        'slug':        slug,
+        'duration_s':  duration_s,
+        'whisper_segs': whisper_segs,
+        'segments':    segments,
     }
     with open(transcript_path, 'w', encoding='utf-8') as f:
         json.dump(transcript, f, indent=2, ensure_ascii=False)
