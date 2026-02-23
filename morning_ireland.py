@@ -67,10 +67,10 @@ def parse_duration(s):
         return parts[0]*60 + parts[1]
     return 0
 
-def categorise(title):
-    tl = title.lower()
+def categorise(title, desc=""):
+    text = (title + " " + desc).lower()
     for cat, keywords in CATEGORIES:
-        if any(kw in tl for kw in keywords):
+        if any(kw in text for kw in keywords):
             return cat
     return FALLBACK_CATEGORY
 
@@ -101,7 +101,7 @@ def parse_feed(xml_bytes):
         duration = parse_duration(dur_el.text)
         seg_date = date_el.text.strip()          # yyyy-mm-dd
         guid     = guid_el.text.strip() if guid_el is not None else f"{seg_date}-{title}"
-        category = categorise(title)
+        category = categorise(title, desc)
 
         items.append({
             "guid":     guid,
@@ -266,7 +266,23 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--chart-only", action="store_true",
                         help="Skip RSS fetch; regenerate chart from saved CSV only")
+    parser.add_argument("--recategorise", action="store_true",
+                        help="Re-run categorisation on all existing CSV rows and rewrite the file")
     args = parser.parse_args()
+
+    if args.recategorise:
+        rows = load_all_items(CSV_FILE)
+        if not rows:
+            print("No data in CSV to recategorise.")
+            sys.exit(0)
+        for r in rows:
+            r["category"] = categorise(r["title"], r.get("desc", ""))
+        with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=FIELDNAMES)
+            writer.writeheader()
+            writer.writerows(rows)
+        print(f"Recategorised {len(rows)} rows and rewrote {CSV_FILE}")
+        sys.exit(0)
 
     if not args.chart_only:
         print(f"Fetching {RSS_URL} …")
