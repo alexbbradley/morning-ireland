@@ -36,6 +36,9 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y ffmpeg
+
       - name: Install Python dependencies
         run: pip install anthropic openai
 
