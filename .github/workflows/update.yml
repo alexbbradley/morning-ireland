@@ -37,13 +37,19 @@ jobs:
         run: npm ci
 
       - name: Install Python dependencies
-        run: pip install anthropic
+        run: pip install anthropic openai
 
       - name: Recategorise existing rows (if requested)
         if: ${{ inputs.recategorise }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python morning_ireland.py --recategorise
+
+      - name: Transcribe full show
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python morning_ireland_audio.py
 
       - name: Fetch RSS and update CSV
         env:
@@ -57,7 +63,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add morning_ireland_data.csv docs/
+          git add morning_ireland_data.csv docs/ transcripts/
           # Only commit if something actually changed
           git diff --staged --quiet || git commit -m "Daily update $(date -u +%Y-%m-%d)"
           git push
