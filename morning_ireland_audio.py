@@ -224,9 +224,8 @@ def segment_with_claude(whisper_segs, claude_client):
         'For each one output:\n'
         '- start_s  (start time in seconds, integer)\n'
         '- end_s    (end time in seconds, integer)\n'
-        '- title    (concise headline-style title)\n'
-        '- category (exactly one category from the list above)\n'
-        '- summary  (1–2 sentence summary)\n\n'
+        '- title    (concise headline, max 8 words)\n'
+        '- category (exactly one category from the list above)\n\n'
         'Output ONLY a valid JSON array, no markdown fences, no other text.'
     )
 
@@ -235,7 +234,7 @@ def segment_with_claude(whisper_segs, claude_client):
         try:
             msg = claude_client.messages.create(
                 model='claude-sonnet-4-6',
-                max_tokens=4096,
+                max_tokens=8192,
                 messages=[{'role': 'user', 'content': prompt}],
             )
             break
