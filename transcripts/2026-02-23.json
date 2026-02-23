@@ -1,0 +1,284 @@
+{
+  "date": "2026-02-23",
+  "clipper_id": 11780802,
+  "slug": "/radio/radio1/morning-ireland/2026/0223/1559915-morning-ireland-monday-23-february-2026",
+  "duration_s": 6614,
+  "segments": [
+    {
+      "start_s": 0,
+      "end_s": 33,
+      "title": "Morning Ireland programme introduction and preview",
+      "category": "Other"
+    },
+    {
+      "start_s": 33,
+      "end_s": 67,
+      "title": "Business and sport headlines preview",
+      "category": "Other"
+    },
+    {
+      "start_s": 67,
+      "end_s": 173,
+      "title": "Garda figures show online fraud up 130%",
+      "category": "Crime / Justice"
+    },
+    {
+      "start_s": 173,
+      "end_s": 231,
+      "title": "Three killed in County Armagh road collision",
+      "category": "Road Accidents"
+    },
+    {
+      "start_s": 231,
+      "end_s": 326,
+      "title": "Jessie Buckley wins leading actress BAFTA",
+      "category": "Arts / Culture"
+    },
+    {
+      "start_s": 326,
+      "end_s": 357,
+      "title": "Violence in Mexico after cartel boss killed",
+      "category": "International"
+    },
+    {
+      "start_s": 357,
+      "end_s": 392,
+      "title": "Dublin Airport flights cancelled due to US storm",
+      "category": "Transport"
+    },
+    {
+      "start_s": 392,
+      "end_s": 428,
+      "title": "Weather forecast for Ireland Monday",
+      "category": "Weather"
+    },
+    {
+      "start_s": 428,
+      "end_s": 462,
+      "title": "Morning traffic and travel update",
+      "category": "Transport"
+    },
+    {
+      "start_s": 462,
+      "end_s": 644,
+      "title": "It says in the papers review",
+      "category": "It Says in Papers"
+    },
+    {
+      "start_s": 644,
+      "end_s": 671,
+      "title": "Ukraine fourth anniversary preview",
+      "category": "International"
+    },
+    {
+      "start_s": 671,
+      "end_s": 1051,
+      "title": "Armed man shot dead at Mar-a-Lago",
+      "category": "International"
+    },
+    {
+      "start_s": 1051,
+      "end_s": 1111,
+      "title": "Trump tariffs ruled illegal by Supreme Court",
+      "category": "International"
+    },
+    {
+      "start_s": 1111,
+      "end_s": 1351,
+      "title": "Prince Andrew removal from succession considered",
+      "category": "International"
+    },
+    {
+      "start_s": 1351,
+      "end_s": 1708,
+      "title": "Zelensky says Putin started World War Three",
+      "category": "International"
+    },
+    {
+      "start_s": 1708,
+      "end_s": 1820,
+      "title": "News headlines at 7:30",
+      "category": "News Bulletin"
+    },
+    {
+      "start_s": 1820,
+      "end_s": 1969,
+      "title": "Business headlines gold and tariff uncertainty",
+      "category": "Business"
+    },
+    {
+      "start_s": 1969,
+      "end_s": 2010,
+      "title": "Traffic and travel update mid-morning",
+      "category": "Transport"
+    },
+    {
+      "start_s": 2010,
+      "end_s": 2228,
+      "title": "GAA hurling and football league results",
+      "category": "Sports"
+    },
+    {
+      "start_s": 2228,
+      "end_s": 2316,
+      "title": "Rory McIlroy second at Genesis Invitational",
+      "category": "Sports"
+    },
+    {
+      "start_s": 2316,
+      "end_s": 2395,
+      "title": "Premier League and Scottish football results",
+      "category": "Sports"
+    },
+    {
+      "start_s": 2395,
+      "end_s": 2633,
+      "title": "Flares injure boy and damage Dundalk FC pitch",
+      "category": "Sports"
+    },
+    {
+      "start_s": 2633,
+      "end_s": 2868,
+      "title": "Irish authors dominate library borrowing charts",
+      "category": "Arts / Culture"
+    },
+    {
+      "start_s": 2868,
+      "end_s": 2934,
+      "title": "Weather forecast extended outlook week ahead",
+      "category": "Weather"
+    },
+    {
+      "start_s": 2934,
+      "end_s": 3030,
+      "title": "Eight o'clock news bulletin headlines",
+      "category": "News Bulletin"
+    },
+    {
+      "start_s": 3030,
+      "end_s": 3195,
+      "title": "Garda crime figures online fraud details",
+      "category": "Crime / Justice"
+    },
+    {
+      "start_s": 3195,
+      "end_s": 3280,
+      "title": "Three killed County Armagh crash named",
+      "category": "Road Accidents"
+    },
+    {
+      "start_s": 3280,
+      "end_s": 3362,
+      "title": "Mexico violence after cartel leader killed",
+      "category": "International"
+    },
+    {
+      "start_s": 3362,
+      "end_s": 3422,
+      "title": "Jessie Buckley BAFTA win repeated bulletin",
+      "category": "Arts / Culture"
+    },
+    {
+      "start_s": 3422,
+      "end_s": 3462,
+      "title": "Dublin Airport cancellations due to US storm",
+      "category": "Transport"
+    },
+    {
+      "start_s": 3462,
+      "end_s": 3495,
+      "title": "Weather forecast repeated",
+      "category": "Weather"
+    },
+    {
+      "start_s": 3495,
+      "end_s": 3552,
+      "title": "Traffic and travel update eight o'clock",
+      "category": "Transport"
+    },
+    {
+      "start_s": 3552,
+      "end_s": 3759,
+      "title": "It says in papers second review",
+      "category": "It Says in Papers"
+    },
+    {
+      "start_s": 3759,
+      "end_s": 3934,
+      "title": "Online fraud crimes changing nature detail",
+      "category": "Crime / Justice"
+    },
+    {
+      "start_s": 3934,
+      "end_s": 4273,
+      "title": "El Mencho killed sparks Mexico violence",
+      "category": "International"
+    },
+    {
+      "start_s": 4273,
+      "end_s": 4608,
+      "title": "Jessie Buckley BAFTA speech and reaction",
+      "category": "Arts / Culture"
+    },
+    {
+      "start_s": 4608,
+      "end_s": 4683,
+      "title": "News headlines at 8:32",
+      "category": "News Bulletin"
+    },
+    {
+      "start_s": 4683,
+      "end_s": 4759,
+      "title": "Business gold price and workers pay survey",
+      "category": "Business"
+    },
+    {
+      "start_s": 4759,
+      "end_s": 4800,
+      "title": "Traffic and travel update 8:45",
+      "category": "Transport"
+    },
+    {
+      "start_s": 4800,
+      "end_s": 4924,
+      "title": "Ireland beat England record win Twickenham",
+      "category": "Sports"
+    },
+    {
+      "start_s": 4924,
+      "end_s": 5043,
+      "title": "Winter Olympics Ireland athletes farewell",
+      "category": "Sports"
+    },
+    {
+      "start_s": 5043,
+      "end_s": 5170,
+      "title": "Ben Lynch flag bearer Winter Olympics interview",
+      "category": "Sports"
+    },
+    {
+      "start_s": 5170,
+      "end_s": 5290,
+      "title": "EU trade response to Trump tariff ruling",
+      "category": "Business"
+    },
+    {
+      "start_s": 5290,
+      "end_s": 5419,
+      "title": "Foo Fighters secret gig Dingle Other Voices",
+      "category": "Arts / Culture"
+    },
+    {
+      "start_s": 5419,
+      "end_s": 5452,
+      "title": "Programme close and credits",
+      "category": "Other"
+    },
+    {
+      "start_s": 5452,
+      "end_s": 5412,
+      "title": "Irish Hotels Federation annual conference costs",
+      "category": "Business"
+    }
+  ]
+}
