@@ -25,9 +25,9 @@ import time
 from datetime import date
 
 try:
-    import openai as _openai
+    import mistralai as _mistralai
 except ImportError:
-    _openai = None
+    _mistralai = None
 
 try:
     import anthropic as _anthropic
@@ -163,9 +163,9 @@ def split_audio(input_path, output_dir, chunk_secs=600):
     )
 
 
-def transcribe_chunks(chunks, oa_client):
+def transcribe_chunks(chunks, mistral_client):
     """
-    Transcribe each chunk with Whisper (verbose_json, sentence-level timestamps).
+    Transcribe each chunk with Voxtral (segment-level timestamps).
     Offsets each chunk's timestamps and returns a combined list of segments:
       [{'start': float, 'end': float, 'text': str}, …]
     """
@@ -175,20 +175,21 @@ def transcribe_chunks(chunks, oa_client):
     for i, chunk_path in enumerate(chunks):
         print(f'  Chunk {i+1}/{len(chunks)} … ', end='', flush=True)
         with open(chunk_path, 'rb') as f:
-            result = oa_client.audio.transcriptions.create(
-                model='whisper-1',
-                file=f,
-                response_format='verbose_json',
+            result = mistral_client.audio.transcriptions.complete(
+                model='voxtral-mini-2602',
+                file={'content': f, 'file_name': os.path.basename(chunk_path)},
+                timestamp_granularities=['segment'],
             )
-        for seg in result.segments:
+        segs = result.segments or []
+        for seg in segs:
             all_segs.append({
                 'start': round(seg.start + offset, 1),
                 'end':   round(seg.end   + offset, 1),
                 'text':  seg.text.strip(),
             })
-        if result.segments:
-            offset += result.segments[-1].end
-        print(f'{len(result.segments)} phrases (offset {offset/60:.1f}m)')
+        if segs:
+            offset += segs[-1].end
+        print(f'{len(segs)} phrases (offset {offset/60:.1f}m)')
 
     return all_segs
 
@@ -305,16 +306,16 @@ def main():
         return
 
     # Check dependencies
-    if _openai is None:
-        print('ERROR: openai package not installed.  Run: pip install openai')
+    if _mistralai is None:
+        print('ERROR: mistralai package not installed.  Run: pip install mistralai')
         sys.exit(1)
     if _anthropic is None:
         print('ERROR: anthropic package not installed.  Run: pip install anthropic')
         sys.exit(1)
 
-    openai_key = os.environ.get('OPENAI_API_KEY')
-    if not openai_key:
-        print('ERROR: OPENAI_API_KEY environment variable not set')
+    mistral_key = os.environ.get('MISTRAL_API_KEY')
+    if not mistral_key:
+        print('ERROR: MISTRAL_API_KEY environment variable not set')
         sys.exit(1)
 
     anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
@@ -322,8 +323,8 @@ def main():
         print('ERROR: ANTHROPIC_API_KEY environment variable not set')
         sys.exit(1)
 
-    oa_client     = _openai.OpenAI(api_key=openai_key)
-    claude_client = _anthropic.Anthropic(api_key=anthropic_key)
+    mistral_client = _mistralai.Mistral(api_key=mistral_key)
+    claude_client  = _anthropic.Anthropic(api_key=anthropic_key)
 
     os.makedirs(TRANSCRIPTS_DIR, exist_ok=True)
     partial_path = transcript_path.replace('.json', '.partial.json')
@@ -365,8 +366,8 @@ def main():
             chunks = split_audio(audio_path, tmpdir)
             print(f'  {len(chunks)} chunks')
 
-            print('\nTranscribing with Whisper …')
-            whisper_segs = transcribe_chunks(chunks, oa_client)
+            print('\nTranscribing with Voxtral …')
+            whisper_segs = transcribe_chunks(chunks, mistral_client)
             print(f'  Total phrases: {len(whisper_segs)}')
 
         # Save partial so we can resume if Claude fails
